@@ -3,8 +3,8 @@
 🌐 Multi-VRF MPLS & MP‑BGP Lab
 
 ## 🧩 1. Topology Diagram  
-*(Insert your visual topology here)*  
-![Topology Diagram] ![Image](https://github.com/user-attachments/assets/63b337bc-e1e4-42ab-8e2f-41d3cb14920c)
+
+![Image](https://github.com/user-attachments/assets/63b337bc-e1e4-42ab-8e2f-41d3cb14920c)
 
 
 ---
@@ -20,7 +20,9 @@ EIGRP-VRF — connected to EIGRP customer routers (R5 & R8)
 Each customer site advertises a single /32 prefix per VRF. Here's how everything fits together:
 
 R3 — RIP → ISP-A(RIP-VRF) ── MP-BGP/MPLS ── ISP-B(RIP-VRF) → RIP — R6
+
 R4 — OSPF → ISP-A(OSPF-VRF) ── MP-BGP/MPLS ── ISP-B(OSPF-VRF) → OSPF — R7
+
 R5 — EIGRP → ISP-A(EIGRP-VRF) ── MP-BGP/MPLS ── ISP-B(EIGRP-VRF) → EIGRP — R8
 
 ## ✅ 3. Lab Results & Verification
