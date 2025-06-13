@@ -1,0 +1,461 @@
+R1 ISP-1
+--------
+
+en
+config
+
+hostname ISP-A
+
+VRF CONFIGURATION :
+-------------------
+
+ip vrf RIP
+rd 1:1
+route-target export 100:101
+route-target import 200:201
+
+ip vrf OSPF
+rd 1:2
+route-target export 100:102
+route-target import 200:202
+
+ip vrf EIGRP
+rd 1:3
+route-target export 100:103
+route-target import 200:203
+
+
+int e0/0
+ip add 12.1.1.1 255.255.255.0
+no shut 
+
+VRF on interfaces :
+-------------------
+
+int e0/1
+ip vrf forwarding RIP
+ip add 11.1.1.1 255.255.255.0 
+no shut 
+
+int e0/2
+ip vrf forwarding OSPF
+ip add 11.1.1.1 255.255.255.0 
+no shut 
+
+int e0/3
+ip vrf forwarding EIGRP
+ip add 11.1.1.1 255.255.255.0 
+no shut 
+
+VRF on routing protocols :
+--------------------------
+
+router rip
+address-family ipv4 vrf RIP
+version 2
+no auto-summary
+network 11.1.1.0 
+exit
+
+
+router ospf 100 vrf OSPF
+network 11.1.1.0 0.0.0.255 area 10 
+exit
+
+router eigrp 100
+address-family ipv4 vrf EIGRP autonomous-system 100
+no auto-summary
+network 11.1.1.0 255.255.255.0
+exit
+
+MPBGP between ISP routers :
+----------------------------
+
+router bgp 100
+neighor 12.1.1.2 remote-as 100
+neighbot 12.1.1.2 next-hop self 
+address-family vpnv4
+neighbor 12.1.1.2 activiate 
+
+Redistributing routing protocols into MPBGP protocol :
+------------------------------------------------------
+
+router bgp 100
+
+address-family ipv4 unicast vrf RIP
+redistibute RIP
+exit
+
+address-family ipv4 unicast vrf OSPF
+redistibute ospf 100
+exit
+
+address-family ipv4 unicast vrf EIGRP 
+redistibute eigrp 100
+exit
+
+Redistributing MPBGP into all protocols:
+-----------------------------------------
+
+router rip
+address-family ipv4 unicast vrf RIP
+redistibute bgp 100 metric 1
+
+router ospf 100 vrf OSPF
+redistibute bgp 100 metric 1
+
+router eigrp 100
+address-family ipv4 unicast vrf EIGRP
+redistibute bgp 100 metric 1 1 1 1 1
+
+
+Enabling MPLS on isp interfaces :
+---------------------------------
+
+int e0/0 
+mpls ip 
+
+
+
+================================================================================================================================
+
+R2 ISP-2
+--------
+
+en
+config
+
+hostname ISP-B
+
+VRF CONFIGURATION :
+-------------------
+
+ip vrf RIP
+rd 2:1
+route-target export 200:201
+route-target import 100:101
+
+ip vrf OSPF
+rd 2:2
+route-target export 200:202
+route-target import 100:102
+
+
+ip vrf EIGRP
+rd 2:3
+route-target export 200:203
+route-target import 100:103
+
+
+
+int e0/0
+ip add 12.1.1.2 255.255.255.0
+no shut 
+
+VRF on interfaces :
+-------------------
+
+int e0/1
+ip vrf forwarding RIP
+ip add 22.1.1.1 255.255.255.0 
+no shut 
+
+int e0/2
+ip vrf forwarding OSPF
+ip add 22.1.1.1 255.255.255.0 
+no shut 
+
+int e0/3
+ip vrf forwarding EIGRP
+ip add 22.1.1.1 255.255.255.0 
+no shut 
+
+VRF on routing protocols :
+--------------------------
+
+router rip
+version 2
+no auto-summary
+network 22.1.1.0 
+exit
+
+router ospf 100 vrf OSPF 
+router-id 3.3.3.3
+network 22.1.1.0 0.0.0.255 area 0
+exit
+
+int e0/2
+ip opsf network point-to-point 
+exit
+
+router eigrp 100
+address-family ipvr vrf EIGRP automation-number 100
+no aut summary
+network 22.1.1.0 255.255.255.0
+exit
+
+MPBGP between ISP routers :
+----------------------------
+
+router bgp 100
+neighor 12.1.1.1 remote-as 100
+neighbot 12.1.1.1 next-hop self 
+address-family vpnv4
+neighbor 12.1.1.1 activiate 
+
+Redistributing routing protocols into MPBGP protocol :
+------------------------------------------------------
+
+router bgp 100
+
+address-family ipv4 unicast vrf RIP
+redistibute RIP
+exit
+
+address-family ipv4 unicast vrf OSPF
+redistibute ospf 100
+exit
+
+address-family ipv4 unicast vrf EIGRP 
+redistibute eigrp 100
+exit
+
+Redistributing MPBGP into all protocols:
+-----------------------------------------
+
+router rip
+address-family ipv4 unicast vrf RIP
+redistibute bgp 100 metric 1
+
+router ospf 100 vrf OSPF
+redistibute bgp 100 metric 1
+
+router eigrp 100
+address-family ipv4 unicast vrf EIGRP
+redistibute bgp 100 metric 1 1 1 1 1
+
+
+Enabling MPLS on isp interfaces :
+---------------------------------
+
+int e0/0 
+mpls ip 
+
+
+=================================================================================================================================================
+
+R3 RIP customer Site-A :
+-------------------------
+
+en
+config
+
+hostname RIP-A
+
+Ip assignment on interfaces :
+------------------------------ 
+
+int fa0/0
+ip add 11.1.1.2 255.255.255.0 
+no shut
+exit
+
+int lo 1
+ip add 100.1.1.0 255.255.255.255
+exit
+
+Enabling Routing RIP Protocol :
+-------------------------------
+
+router rip
+version 2
+no auto-summary
+network 100.1.1.0 
+network 11.1.1.0 
+exit
+
+
+=======================================================================================================================================
+
+R4 OSPF customer Site-A :
+-------------------------
+
+en
+config
+
+hostname OSPA-A
+
+Ip assignment on interfaces :
+------------------------------ 
+
+int fa0/0
+ip add 11.1.1.2 255.255.255.0 
+no shut
+exit
+
+int lo 1
+ip add 100.1.1.0 255.255.255.255
+exit
+
+Enabling Routing OSPF Protocol :
+--------------------------------
+
+router ospf 100 
+router-id 1.1.1.1
+network 11.1.1.0 0.0.0.255 area 0 
+network 100.1.1.0 0.0.0.0 area 0
+exit
+
+int fa0/0
+ip ospf network point-to-point 
+exit
+
+
+=============================================================================================================
+
+R5 EIGRP customer Site-A :
+-------------------------
+
+en
+config
+
+hostname EIGRP-A
+
+Ip assignment on interfaces :
+------------------------------ 
+
+int fa0/0
+ip add 11.1.1.2 255.255.255.0 
+no shut
+exit
+
+int lo 1
+ip add 100.1.1.0 255.255.255.255
+exit
+
+Enabling Routing EIGRP Protocol :
+--------------------------------
+
+router eigrp 100
+no auto-summary
+network 11.1.1.0 255.255.255.0
+exit
+
+
+============================================================================================================================
+
+R6 RIP customer Site-B :
+------------------------
+
+en
+config
+
+hostname RIP-B
+
+Ip assignment on interfaces :
+------------------------------ 
+
+int fa0/0
+ip add 22.1.1.2 255.255.255.0 
+no shut
+exit
+
+int lo 1
+ip add 200.1.1.0 255.255.255.255
+exit
+
+int lo 2
+ip add 60.1.1.0 255.255.255.255
+exit
+
+Enabling Routing RIP Protocol :
+------------------------------
+
+router rip
+version 2
+no auto-summary
+network 200.1.1.0 
+network 60.1.1.0
+network 22.1.1.0 
+exit
+
+
+============================================================================================================================================
+
+R7 OSPF customer Site-B :
+------------------------
+
+en
+config
+
+hostname OSPF-B
+
+Ip assignment on interfaces :
+------------------------------ 
+
+int fa0/0
+ip add 22.1.1.2 255.255.255.0 
+no shut
+exit
+
+int lo 1
+ip add 200.1.1.0 255.255.255.255
+exit
+
+
+int lo 2
+ip add 70.1.1.0 255.255.255.255
+exit
+
+Enabling Routing OSPF Protocol :
+-------------------------------
+
+router ospf 100 
+router-id 4.4.4.4
+network 22.1.1.0 0.0.0.255 area 0 
+network 200.1.1.0 0.0.0.0 area 0
+network 70.1.1.0 0.0.0.0 area 0
+exit
+
+int f0/0
+ip ospf network point-to-point 
+exit
+
+
+====================================================================================================================================
+
+R8 EIGRP customer Site-B :
+------------------------
+
+en
+config
+
+hostname EIGRP-B
+
+Ip assignment on interfaces :
+------------------------------ 
+
+int fa0/0
+ip add 22.1.1.2 255.255.255.0 
+no shut
+exit
+
+int lo 1
+ip add 200.1.1.0 255.255.255.255
+exit
+
+int lo 2
+ip add 80.1.1.0 255.255.255.255
+exit
+
+
+Enabling Routing EIGRP Protocol :
+-------------------------------
+
+router eigrp 100
+no auto-summary
+network 22.1.1.0 255.255.255.0
+network 200.1.1.0 255.255.255.255
+network 80.1.1.0 255.255.255.25
+exit
+
